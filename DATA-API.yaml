@@ -1,0 +1,104 @@
+# Human-readable API verification manifest for the hackathon handoff.
+# The brief lists required fields but does not publish a machine-readable
+# DATA-API schema. Confirm the exact schema version/key names with organizers.
+version: "1.0"
+solution: "Учёба с Лучиком"
+base_url: "https://85-159-231-99.sslip.io"
+openapi: "openapi.json"
+test_data: "test-data/api-scenario.json"
+roles:
+  public: "No authentication"
+  max_student: "A tester opens the bot in MAX and supplies fresh signed WebAppData; never commit it"
+checks:
+  - id: health
+    role: public
+    method: GET
+    path: /health
+    request: {query: {}, path: {}, headers: {}, body: null}
+    expected:
+      status_codes: [200]
+      content_type: application/json
+      json_required: [status]
+      json_equals: {status: ok}
+  - id: max_login
+    role: max_student
+    method: POST
+    path: /api/auth/max
+    request:
+      query: {}
+      path: {}
+      headers: {Content-Type: application/json}
+      body: {init_data: "${FRESH_MAX_WEBAPP_DATA}"}
+    expected:
+      status_codes: [200]
+      content_type: application/json
+      json_required: [token]
+  - id: register
+    role: max_student
+    method: POST
+    path: /api/register
+    request:
+      query: {}
+      path: {}
+      headers: {Authorization: "Bearer ${STUDENT_SESSION_TOKEN}"}
+      body: null
+    expected:
+      status_codes: [200]
+      content_type: application/json
+      json_required: [student]
+  - id: profile
+    role: max_student
+    method: GET
+    path: /api/me
+    request:
+      query: {}
+      path: {}
+      headers: {Authorization: "Bearer ${STUDENT_SESSION_TOKEN}"}
+      body: null
+    expected:
+      status_codes: [200]
+      content_type: application/json
+      json_required: [name, student, lesson, mood, daily, activity]
+  - id: synthetic_diary
+    role: max_student
+    method: GET
+    path: /api/diary
+    request:
+      query: {}
+      path: {}
+      headers: {Authorization: "Bearer ${STUDENT_SESSION_TOKEN}"}
+      body: null
+    expected:
+      status_codes: [200]
+      content_type: application/json
+      json_required: [mock, entries]
+      json_equals: {mock: true}
+  - id: create_lesson
+    role: max_student
+    method: POST
+    path: /api/lesson-jobs
+    request:
+      query: {}
+      path: {}
+      headers:
+        Authorization: "Bearer ${STUDENT_SESSION_TOKEN}"
+        Content-Type: application/json
+      body: {subject: "Математика", topic: "Обыкновенные дроби"}
+    expected:
+      status_codes: [202]
+      content_type: application/json
+      json_required: [id, status]
+  - id: lesson_result
+    role: max_student
+    method: GET
+    path: /api/lesson-jobs/{job_id}
+    request:
+      query: {}
+      path: {job_id: "${LESSON_JOB_ID}"}
+      headers: {Authorization: "Bearer ${STUDENT_SESSION_TOKEN}"}
+      body: null
+    expected:
+      status_codes: [200]
+      content_type: application/json
+      json_required: [id, status]
+      note: "Poll until ready; then lesson is present. On provider failure status is error."

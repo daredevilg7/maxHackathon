@@ -1,0 +1,19 @@
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_PATH: /data/buddy.db
+    ports:
+      - "127.0.0.1:${PORT:-8000}:8000"
+    volumes:
+      - buddy_data:/data
+      - ./certs:/certs:ro
+    init: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+volumes:
+  buddy_data:

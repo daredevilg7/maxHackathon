@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f5f7fa">
+  <title>Учёба с Лучиком</title>
+  <link rel="stylesheet" href="/static/style.css?v=11">
+  <script src="https://st.max.ru/js/max-web-app.js" defer></script>
+  <script src="/static/app.js?v=11" defer></script>
+</head>
+<body>
+<div id="app-shell" class="app-shell">
+  <header class="game-hud">
+    <div class="hud-profile">
+      <span class="hud-avatar"><img src="/static/mascot-happy.png" alt=""></span>
+      <span class="hud-name"><strong>Лучик</strong><small id="class-label" hidden></small></span>
+    </div>
+    <div class="hud-goal" aria-label="Прогресс до цели дня"><strong id="hud-count">0 / 2</strong></div>
+  </header>
+
+  <div id="demo-banner" class="demo-banner" hidden>Демо-урок без подключения к AI</div>
+  <div id="error" class="game-error" role="alert" hidden></div>
+
+  <div id="loading" class="boot-screen" role="status" aria-live="polite">
+    <img src="/static/mascot-focused.png" alt="">
+    <p>Лучик открывает свою комнату…</p>
+  </div>
+
+  <main id="welcome" class="view" hidden>
+    <section class="welcome-world">
+      <div class="welcome-sky"></div>
+      <span class="welcome-kicker">Твой напарник в учёбе</span>
+      <h1>Привет!<br>Я Лучик.</h1>
+      <p>Будем разбираться вместе — по одному маленькому шагу.</p>
+      <img class="welcome-mascot" src="/static/mascot-happy.png" alt="Радостный Лучик приветствует тебя">
+    </section>
+    <div class="welcome-dock">
+      <span class="dock-label">Первая миссия</span>
+      <strong>Пять шагов. Один новый навык.</strong>
+      <button id="register" class="game-button" type="button">Познакомиться с Лучиком <span aria-hidden="true">→</span></button>
+      <p id="registration-note">Вход через твой профиль MAX</p>
+    </div>
+  </main>
+
+  <main id="dashboard" class="view" hidden>
+    <section class="buddy-world" aria-label="Комната Лучика">
+      <div class="buddy-speech">
+        <h1 id="greeting">Привет!</h1>
+        <p id="mood-copy">Давай решим два вопроса вместе?</p>
+      </div>
+      <img id="mood-mascot" class="world-mascot" src="/static/mascot-focused.png" alt="Лучик ждёт новый урок">
+    </section>
+
+    <section class="quest-dock" aria-labelledby="daily-title">
+      <div class="quest-dock-head">
+        <div><span class="dock-label">На сегодня</span><h2 id="daily-title">Учебная практика</h2></div>
+        <strong id="mini-progress">0 / 5</strong>
+      </div>
+      <div id="user-progress-track" class="quest-pips" role="progressbar" aria-label="Правильные ответы за сегодня" aria-valuemin="0" aria-valuemax="5" aria-valuenow="0">
+        <span class="quest-pip" aria-hidden="true">✦</span><span class="quest-pip mood-target" aria-hidden="true">✦</span><span class="quest-pip" aria-hidden="true">✦</span><span class="quest-pip" aria-hidden="true">✦</span><span class="quest-pip" aria-hidden="true">✦</span>
+      </div>
+      <p id="daily-status" class="quest-message">Цель дня: два верных ответа.</p>
+      <div class="streak-strip" aria-label="Серия дней с ответами">
+        <div class="streak-summary"><span class="streak-mark" aria-hidden="true">♨</span><span>Серия ответов</span><strong id="streak-count">0 дней</strong></div>
+        <div id="streak-days" class="streak-days"></div>
+      </div>
+      <div id="resume-view" class="mission-resume" hidden>
+        <span class="mission-resume-icon" aria-hidden="true">↗</span>
+        <div><span class="dock-label">Текущее занятие</span><strong id="resume-title"></strong><p id="resume-copy"></p></div>
+        <button id="resume" class="game-button" type="button">Продолжить урок <span aria-hidden="true">→</span></button>
+        <button id="cancel-from-home" class="cancel-link" type="button">Отменить занятие</button>
+      </div>
+      <div class="home-actions">
+        <button id="start-mission" class="game-button" type="button">Новая тема <span aria-hidden="true">→</span></button>
+        <button id="history-open" class="game-button game-button-secondary" type="button">Мои темы</button>
+      </div>
+    </section>
+  </main>
+
+  <main id="history" class="view" hidden>
+    <div class="map-topline"><button id="history-back" class="game-back" type="button" aria-label="Вернуться к Лучику">←</button><span>Изученные темы</span></div>
+    <div class="history-intro"><span class="dock-label">Твоя коллекция</span><h1>К чему вернёмся?</h1><p>Выбери завершённую тему и проверь себя за пять вопросов.</p></div>
+    <div id="history-list" class="history-list"></div>
+    <div id="history-empty" class="history-empty" hidden><img src="/static/mascot-focused.png" alt=""><strong>Пока здесь тихо</strong><p>Заверши первый урок, и его тема появится тут.</p><button id="history-new" class="game-button" type="button">Выбрать тему</button></div>
+  </main>
+
+  <main id="quiz-view" class="view" hidden>
+    <div class="map-topline"><button id="quiz-back" class="game-back" type="button" aria-label="Вернуться к темам">←</button><span id="quiz-topic-label">Проверка знаний</span></div>
+    <div class="quiz-progress"><span id="quiz-step-label">Вопрос 1 из 5</span><div id="quiz-progress-track" role="progressbar" aria-label="Прогресс теста" aria-valuemin="0" aria-valuemax="5" aria-valuenow="1"><span id="quiz-progress-fill"></span></div></div>
+    <article class="quiz-card"><span id="quiz-kind-label" class="dock-label">Выбери один ответ</span><h1 id="quiz-prompt"></h1><div id="quiz-options" class="quiz-options"></div><section id="quiz-feedback" class="quiz-feedback" aria-live="polite" hidden><strong id="quiz-feedback-title"></strong><p id="quiz-feedback-text"></p></section></article>
+    <div class="quiz-controls"><button id="quiz-submit" class="game-button" type="button" disabled>Проверить ответ</button><button id="quiz-next" class="game-button" type="button" hidden>Следующий вопрос →</button></div>
+  </main>
+
+  <main id="quiz-complete" class="view" hidden>
+    <section class="finish-world quiz-finish"><img src="/static/mascot-proud.png" alt="Лучик"><span class="dock-label">Тест завершён</span><h1 id="quiz-score">0 из 5</h1><p id="quiz-score-copy"></p><button id="quiz-to-history" class="game-button" type="button">Мои темы</button><button id="quiz-to-home" class="game-button game-button-secondary" type="button">На главную</button></section>
+  </main>
+
+  <main id="catalog" class="view" hidden>
+    <div class="map-topline"><button id="catalog-back" class="game-back" type="button" aria-label="Вернуться к Лучику">←</button><span>Выбор предмета</span></div>
+    <section class="map-intro">
+      <div><span class="dock-label">Новая тема</span><h1>Куда пойдём сегодня?</h1><p>Выбери предмет, а я подготовлю короткий урок.</p></div>
+    </section>
+    <div id="subject-chips" class="subject-grid" aria-label="Предметы"></div>
+    <form id="topic-form" class="topic-form" hidden>
+      <div class="visually-hidden"><label for="subject">Предмет</label><select id="subject" required></select></div>
+      <div class="topic-head"><div><span id="topic-list-label" class="dock-label">Пять важных тем</span><h1 id="current-subject-badge"></h1></div><button id="change-subject" type="button" class="change-subject">Сменить</button></div>
+      <div id="topic-picks" class="topic-picks" aria-label="Темы выбранного предмета"></div>
+      <label class="custom-topic-label" for="topic">Или напиши свою тему</label>
+      <input id="topic" class="game-input" required minlength="2" maxlength="200" placeholder="Название темы">
+      <button id="generate" class="game-button" type="submit">Начать урок <span aria-hidden="true">→</span></button>
+    </form>
+  </main>
+
+  <main id="lesson-view" class="view" hidden>
+    <div class="mission-topline"><button id="back" class="game-back" type="button" aria-label="Вернуться к Лучику">←</button><span id="lesson-subject"></span><button id="cancel-from-lesson" class="cancel-link" type="button">Отменить</button></div>
+    <div class="mission-progress">
+      <span id="step-label">ШАГ 1 / 5</span>
+      <div id="step-progress-track" role="progressbar" aria-label="Шаги урока" aria-valuemin="0" aria-valuemax="5" aria-valuenow="1"><ol id="steps" class="mission-steps"></ol></div>
+    </div>
+    <div class="lesson-companion">
+      <img id="lesson-mascot" src="/static/mascot-focused.png" alt="Лучик">
+      <div class="lesson-speech"><span>Лучик говорит</span><p id="buddy-line">Сначала разберём одну простую идею.</p></div>
+    </div>
+    <article class="mission-sheet">
+      <div class="mission-sheet-top"><span id="lesson-topic"></span><span id="phase-label">1 / 3</span></div>
+      <h1 id="block-title"></h1>
+      <div class="mission-sheet-content">
+      <section id="theory-section" class="lesson-phase" aria-labelledby="theory-label">
+        <span class="phase-token">1</span><h2 id="theory-label">Сначала поймём</h2>
+        <p id="theory" class="lesson-body"></p>
+      </section>
+      <section id="example-section" class="lesson-phase" aria-labelledby="example-label" hidden>
+        <span class="phase-token">2</span><h2 id="example-label">Смотри, как это работает</h2>
+        <p id="example" class="lesson-body"></p>
+      </section>
+      <section id="question-section" class="lesson-phase" aria-labelledby="question-label" hidden>
+        <span class="phase-token">3</span><h2 id="question-label">Теперь твой ход</h2>
+        <p id="question" class="question-body"></p>
+        <section id="feedback" class="feedback-box" aria-live="polite" hidden>
+          <div class="feedback-head"><img id="feedback-mascot" src="/static/mascot-focused.png" alt=""><div><h3 id="feedback-title"></h3><span id="attempt-count"></span></div></div>
+          <p id="feedback-explanation"></p>
+          <div class="feedback-hint"><strong id="feedback-hint-label">Подсказка Лучика</strong><p id="feedback-addition"></p></div>
+        </section>
+        <form id="answer-form" class="answer-form">
+          <label for="answer">Как ты думаешь?</label>
+          <textarea id="answer" class="game-input" required maxlength="3000" rows="3" placeholder="Напиши ответ своими словами"></textarea>
+          <button id="check" class="game-button" type="submit">Проверить <span aria-hidden="true">✓</span></button>
+        </form>
+      </section>
+      </div>
+      <div class="mission-controls">
+        <button id="simplify" class="simplify-button" type="button">Не понял? Объясни проще</button>
+        <div class="phase-actions"><button id="phase-back" class="game-button game-button-secondary" type="button" hidden>Назад</button><button id="phase-next" class="game-button" type="button">Показать пример <span aria-hidden="true">→</span></button></div>
+        <button id="next" class="game-button" type="button" hidden>Следующий шаг <span aria-hidden="true">→</span></button>
+      </div>
+    </article>
+  </main>
+
+  <main id="complete" class="view" hidden>
+    <section class="finish-world">
+      <span class="finish-spark" aria-hidden="true">✦ ✧ ✦</span>
+      <img src="/static/mascot-proud.png" alt="Лучик радуется вместе с тобой">
+      <span class="dock-label">Миссия выполнена</span>
+      <h1>У тебя получилось!</h1>
+      <p id="complete-topic"></p>
+      <button id="home" class="game-button" type="button">К Лучику <span aria-hidden="true">→</span></button>
+    </section>
+  </main>
+</div>
+
+<div id="cancel-dialog" class="confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="cancel-title" tabindex="-1" hidden>
+  <div class="confirm-panel">
+    <h2 id="cancel-title">Отменить занятие?</h2>
+    <p>Ты сможешь сразу выбрать другую тему. Верные ответы за сегодня сохранятся.</p>
+    <button id="confirm-cancel" class="game-button" type="button">Да, отменить</button>
+    <button id="keep-lesson" class="game-button game-button-secondary" type="button">Продолжить занятие</button>
+  </div>
+</div>
+
+<div id="ai-loading" class="ai-loading" role="status" aria-live="polite" tabindex="-1" hidden>
+  <div class="thinking-scene">
+    <img class="thinking-fallback" src="/static/mascot-focused.png" alt="">
+    <video id="thinking-video" muted playsinline loop preload="metadata" poster="/static/mascot-focused.png" aria-hidden="true">
+      <source src="/static/mascot-thinking.mp4" type="video/mp4">
+    </video>
+  </div>
+  <div class="thinking-copy">
+    <span class="thinking-label">Минутка для мысли</span>
+    <h2>Лучик думает…</h2>
+    <p id="ai-loading-text">Разбираем задачу вместе</p>
+    <span class="thinking-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+  </div>
+</div>
+</body>
+</html>

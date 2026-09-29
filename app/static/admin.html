@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Расписания · Лучик</title>
+  <link rel="stylesheet" href="/static/admin.css?v=1">
+  <script src="/static/admin.js?v=1" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark">Л</span><div><strong>Лучик</strong><small>Управление расписанием</small></div></div>
+    <button id="logout" class="text-button" type="button" hidden>Выйти</button>
+  </header>
+
+  <main>
+    <section id="login-screen" class="login-panel" aria-labelledby="login-title">
+      <span class="eyebrow">Для администратора</span>
+      <h1 id="login-title">Расписания учеников</h1>
+      <p>Войди, чтобы посмотреть учеников и изменить записи в их расписании.</p>
+      <form id="login-form">
+        <label for="password">Пароль</label>
+        <input id="password" type="password" autocomplete="current-password" required>
+        <button class="primary-button" type="submit">Войти</button>
+      </form>
+      <p id="login-error" class="error" role="alert" hidden></p>
+    </section>
+
+    <div id="workspace" class="workspace" hidden>
+      <aside class="students-pane" aria-labelledby="students-title">
+        <div class="pane-heading"><span class="eyebrow">База учеников</span><h1 id="students-title">Ученики</h1></div>
+        <label class="search-label" for="student-search">Найти по имени или ID</label>
+        <input id="student-search" class="search-input" type="search" placeholder="Поиск" autocomplete="off">
+        <div id="students-list" class="students-list"></div>
+        <button id="load-more" class="text-button load-more" type="button" hidden>Показать ещё</button>
+      </aside>
+
+      <section class="schedule-pane" aria-labelledby="schedule-title">
+        <div id="empty-state" class="empty-state"><span class="empty-mark">Л</span><h2>Выбери ученика</h2><p>Здесь появятся его занятия и домашние задания.</p></div>
+        <div id="schedule-content" hidden>
+          <div class="schedule-heading">
+            <div><span class="eyebrow">Расписание ученика</span><h2 id="schedule-title"></h2><p id="student-meta" class="muted"></p></div>
+            <button id="add-entry" class="primary-button add-button" type="button">+ Добавить запись</button>
+          </div>
+          <div class="notice">Это локальное расписание проекта. Изменения сразу доступны через API дневника ученика. Подключения к школьному электронному дневнику пока нет.</div>
+          <p id="schedule-error" class="error" role="alert" hidden></p>
+          <div id="schedule-list" class="schedule-list"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <dialog id="editor" class="editor-dialog" aria-labelledby="editor-title">
+    <form id="entry-form">
+      <div class="editor-heading"><div><span class="eyebrow">Расписание</span><h2 id="editor-title">Новая запись</h2></div><button id="close-editor" class="icon-button" type="button" aria-label="Закрыть">×</button></div>
+      <div class="form-grid">
+        <label>Дата<input id="entry-day" type="date" required></label>
+        <label>Номер урока<input id="entry-period" type="number" min="1" max="12" inputmode="numeric" required></label>
+      </div>
+      <label>Предмет<input id="entry-subject" type="text" maxlength="80" required></label>
+      <label>Тема<input id="entry-topic" type="text" maxlength="200" required></label>
+      <label>Домашнее задание или заметка<textarea id="entry-homework" rows="3" maxlength="1000"></textarea></label>
+      <label class="check-row"><input id="entry-assessment" type="checkbox"><span>Контрольная или самостоятельная</span></label>
+      <p id="editor-error" class="error" role="alert" hidden></p>
+      <div class="editor-actions"><button id="cancel-editor" class="secondary-button" type="button">Отмена</button><button id="save-entry" class="primary-button" type="submit">Сохранить</button></div>
+    </form>
+  </dialog>
+</body>
+</html>
