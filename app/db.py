@@ -10,7 +10,21 @@ from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 
-DEFAULT_SCHEDULE = (
+PRIMARY_SCHEDULE = (
+    ('Математика', 'Сложение и вычитание'),
+    ('Русский язык', 'Слова и предложения'),
+    ('Литературное чтение', 'Работа с текстом'),
+    ('Окружающий мир', 'Растения вокруг нас'),
+)
+
+MIDDLE_SCHEDULE = (
+    ('Математика', 'Дроби'),
+    ('Русский язык', 'Части речи'),
+    ('Биология', 'Растения'),
+    ('История', 'Древняя Русь'),
+)
+
+SEVENTH_SCHEDULE = (
     ('Математика', 'Дроби'),
     ('Русский язык', 'Причастия'),
     ('Физика', 'Плотность вещества'),
@@ -79,6 +93,9 @@ class Database:
             ''')
             c.execute('''INSERT OR IGNORE INTO activity_days(user_id,day)
                          SELECT DISTINCT user_id,solved_on FROM solved_steps''')
+            # Earlier versions assigned synthetic grades above seven. Keep existing
+            # profiles within the supported 1-7 range without replacing IDs.
+            c.execute('UPDATE students SET grade=7 WHERE grade>7')
 
     @contextmanager
     def connect(self):
@@ -115,7 +132,7 @@ class Database:
             student = c.execute('SELECT * FROM students WHERE id=?', (user['id'],)).fetchone()
             if not student:
                 c.execute('INSERT INTO students VALUES(?,?,?)',
-                          (user['id'], user['name'], secrets.choice([7, 8, 9])))
+                          (user['id'], user['name'], secrets.choice(tuple(range(1, 8)))))
             marker = school_end.isoformat()
             if not c.execute('SELECT 1 FROM schedule_coverage WHERE user_id=? AND year_end=?',
                              (user['id'], marker)).fetchone():
@@ -124,6 +141,8 @@ class Database:
             return dict(c.execute('SELECT * FROM students WHERE id=?', (user['id'],)).fetchone())
 
     def _extend_student_schedule(self, c, uid, school_start, school_end, today):
+        grade = c.execute('SELECT grade FROM students WHERE id=?', (uid,)).fetchone()['grade']
+        schedule = PRIMARY_SCHEDULE if grade <= 4 else MIDDLE_SCHEDULE if grade <= 6 else SEVENTH_SCHEDULE
         latest = c.execute('SELECT MAX(day) FROM diary WHERE user_id=? AND day BETWEEN ? AND ?',
                            (uid, school_start.isoformat(), school_end.isoformat())).fetchone()[0]
         first = date.fromisoformat(latest) + timedelta(days=1) if latest else max(today, school_start)
@@ -133,7 +152,7 @@ class Database:
         day = first
         while day <= school_end:
             if day.weekday() < 5:
-                for period, (subject, topic) in enumerate(DEFAULT_SCHEDULE, 1):
+                for period, (subject, topic) in enumerate(schedule, 1):
                     entries.append((uid, day.isoformat(), period, subject, topic,
                                     f'Повторить тему «{topic}», выполнить задания 1–3', 0))
             day += timedelta(days=1)

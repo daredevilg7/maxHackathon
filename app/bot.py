@@ -8,7 +8,7 @@ from pathlib import Path
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 import httpx
-from .ai import AIError, RouterAI, SUBJECTS, SUBJECT_EXAMPLES, unrelated_topic_message
+from .ai import AIError, RouterAI, SUBJECT_EXAMPLES, subjects_for_grade, unrelated_topic_message
 
 log = logging.getLogger(__name__)
 
@@ -130,6 +130,7 @@ async def handle_event(client, settings, db, event, ai=None):
     account = db.student(uid)
     if not account:
         account = db.register({'id': uid, 'name': (user.get('name') or user.get('first_name') or 'Ученик')[:120]})
+    available_subjects = subjects_for_grade(account['grade'])
     if not isinstance(incoming, str):
         return
     incoming = incoming.strip()
@@ -137,7 +138,7 @@ async def handle_event(client, settings, db, event, ai=None):
 
     if command in ('/start', '/menu', 'меню', 'отмена'):
         db.clear_bot_dialog(uid)
-        greeting = 'Привет! Я Лучик. Здесь можно посмотреть успехи и расписание или выбрать тему для подготовки.'
+        greeting = 'Привет! Я Лучик, помощник для учеников 1–7 классов. Здесь можно посмотреть успехи и расписание или выбрать тему для подготовки.'
         await send_message(client, uid, greeting, [menu_keyboard(settings)])
         return
 
@@ -165,15 +166,15 @@ async def handle_event(client, settings, db, event, ai=None):
 
     if command in ('выбрать тему', '/topic'):
         db.set_bot_dialog(uid, 'subject')
-        rows = [[message_button(subject) for subject in SUBJECTS[index:index + 3]]
-                for index in range(0, len(SUBJECTS), 3)]
+        rows = [[message_button(subject) for subject in available_subjects[index:index + 3]]
+                for index in range(0, len(available_subjects), 3)]
         rows.append([message_button('Отмена')])
         await send_message(client, uid, 'Выбери предмет для подготовки:', [keyboard(rows)])
         return
 
     dialog = db.bot_dialog(uid)
-    if (dialog and dialog['stage'] == 'subject') or incoming in SUBJECTS:
-        if incoming not in SUBJECTS:
+    if (dialog and dialog['stage'] == 'subject') or incoming in available_subjects:
+        if incoming not in available_subjects:
             await send_message(client, uid, 'Такого предмета в списке нет. Нажми кнопку с предметом или напиши «Отмена».')
             return
         db.set_bot_dialog(uid, 'topic', incoming)
@@ -188,7 +189,7 @@ async def handle_event(client, settings, db, event, ai=None):
             await send_message(client, uid, 'Название темы должно быть от 2 до 200 символов. Напиши его ещё раз.')
             return
         subject = dialog['subject']
-        if subject not in SUBJECTS:
+        if subject not in available_subjects:
             db.clear_bot_dialog(uid)
             await send_message(client, uid, 'Выбери предмет ещё раз.', [menu_keyboard(settings)])
             return

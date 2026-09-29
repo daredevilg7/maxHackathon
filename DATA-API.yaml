@@ -58,7 +58,7 @@ checks:
     expected:
       status_codes: [200]
       content_type: application/json
-      json_required: [name, student, lesson, mood, daily, activity]
+      json_required: [name, student, subjects, lesson, mood, daily, activity]
   - id: synthetic_diary
     role: max_student
     method: GET

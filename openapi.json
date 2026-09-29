@@ -640,6 +640,7 @@
                   "required": [
                     "name",
                     "student",
+                    "subjects",
                     "lesson",
                     "mood",
                     "daily",
@@ -648,6 +649,7 @@
                   "properties": {
                     "name": {},
                     "student": {},
+                    "subjects": {},
                     "lesson": {},
                     "mood": {},
                     "daily": {},

@@ -15,7 +15,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field
 
-from .ai import AIError, DemoAI, RouterAI, SUBJECTS, SimpleExplanation, QuizContent, unrelated_topic_message
+from .ai import AIError, DemoAI, RouterAI, SUBJECTS, subjects_for_grade, SimpleExplanation, QuizContent, unrelated_topic_message
 from .auth import validate_init_data
 from .config import Settings
 from .db import Database, public_lesson, public_quiz
@@ -199,6 +199,7 @@ def create_app(settings=None, ai=None):
         return {
             'name': user['name'],
             'student': s,
+            'subjects': subjects_for_grade(s['grade']) if s else [],
             'lesson': public_lesson(l),
             'mood': daily['mood'] if s else 'ready',
             'daily': daily,
@@ -319,7 +320,7 @@ def create_app(settings=None, ai=None):
 
     @app.post('/api/lessons')
     async def new_lesson(body:Topic, s=Depends(student)):
-        if body.subject not in SUBJECTS:
+        if body.subject not in subjects_for_grade(s['grade']):
             raise HTTPException(422,'Выбери предмет из списка.')
         if settings.demo_mode and (body.subject != 'Математика' or body.topic != 'Обыкновенные дроби'):
             raise HTTPException(422,'В деморежиме доступен готовый урок «Обыкновенные дроби».')
@@ -399,7 +400,7 @@ def create_app(settings=None, ai=None):
 
     @app.post('/api/lesson-jobs', status_code=202)
     async def start_lesson_job(body: Topic, s=Depends(student)):
-        if body.subject not in SUBJECTS:
+        if body.subject not in subjects_for_grade(s['grade']):
             raise HTTPException(422, 'Выбери предмет из списка.')
         if settings.demo_mode and (body.subject != 'Математика' or body.topic != 'Обыкновенные дроби'):
             raise HTTPException(422, 'В деморежиме доступен готовый урок «Обыкновенные дроби».')

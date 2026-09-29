@@ -75,7 +75,7 @@ def main():
         ('/api/config', 'get'): ['demo_mode', 'subjects'],
         ('/api/auth/max', 'post'): ['token'],
         ('/api/register', 'post'): ['student'],
-        ('/api/me', 'get'): ['name', 'student', 'lesson', 'mood', 'daily', 'activity'],
+        ('/api/me', 'get'): ['name', 'student', 'subjects', 'lesson', 'mood', 'daily', 'activity'],
         ('/api/diary', 'get'): ['mock', 'entries'],
         ('/api/history', 'get'): ['topics'],
         ('/api/lesson-jobs/{job_id}', 'get'): ['id', 'status'],

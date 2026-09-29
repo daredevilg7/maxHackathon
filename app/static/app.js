@@ -11,15 +11,23 @@ let quizMatching = [-1, -1, -1, -1];
 const views = ['welcome', 'dashboard', 'catalog', 'lesson-view', 'complete', 'history', 'quiz-view', 'quiz-complete'];
 
 const subjectTopics = {
-  'Математика': ['Обыкновенные дроби', 'Проценты', 'Линейные уравнения', 'Степени числа', 'Площадь фигур'],
-  'Русский язык': ['Безударные гласные', 'Части речи', 'Однородные члены', 'Причастный оборот', 'Прямая речь'],
-  'Физика': ['Сила и движение', 'Плотность вещества', 'Давление', 'Закон Ома', 'Энергия'],
-  'Биология': ['Строение клетки', 'Фотосинтез', 'Органы человека', 'Экосистемы', 'Наследственность'],
-  'История': ['Древняя Русь', 'Монгольское нашествие', 'Пётр I', 'Война 1812 года', 'Великая Отечественная война'],
-  'Химия': ['Атомы и молекулы', 'Периодическая таблица', 'Валентность', 'Химические реакции', 'Кислоты и основания'],
-  'География': ['Географические координаты', 'Климат', 'Природные зоны', 'Рельеф Земли', 'Население России'],
-  'Информатика': ['Алгоритмы', 'Системы счисления', 'Логика', 'Электронные таблицы', 'Безопасность в интернете'],
+  'Математика': ['Обыкновенные дроби', 'Проценты', 'Пропорции', 'Уравнения', 'Площадь фигур'],
+  'Русский язык': ['Безударные гласные', 'Части речи', 'Главные члены предложения', 'Однородные члены', 'Прямая речь'],
+  'Физика': ['Сила и движение', 'Плотность вещества', 'Давление', 'Работа и мощность', 'Энергия'],
+  'Биология': ['Строение клетки', 'Растения', 'Животные', 'Органы человека', 'Экосистемы'],
+  'История': ['Древний мир', 'Древняя Русь', 'Средние века', 'Исторические источники', 'Историческая карта'],
+  'География': ['Материки', 'Климат', 'Природные зоны', 'Рельеф Земли', 'Карта мира'],
+  'Информатика': ['Алгоритмы', 'Информация', 'Файлы', 'Логика', 'Безопасность в интернете'],
   'Английский язык': ['Present Simple', 'Past Simple', 'Future Simple', 'Неправильные глаголы', 'Как задать вопрос']
+};
+
+const primarySubjectTopics = {
+  'Математика': ['Счёт', 'Сложение', 'Вычитание', 'Задачи', 'Геометрические фигуры'],
+  'Русский язык': ['Звуки и буквы', 'Слова и предложения', 'Безударные гласные', 'Части речи', 'Правописание слов'],
+  'Литературное чтение': ['Читаем рассказ', 'Главная мысль текста', 'Герои рассказа', 'Стихотворение', 'Пересказ'],
+  'Окружающий мир': ['Времена года', 'Растения', 'Животные', 'Природа и человек', 'Правила безопасности'],
+  'Английский язык': ['Цвета', 'Числа', 'Семья', 'Животные', 'Приветствие'],
+  'Информатика': ['Информация вокруг нас', 'Алгоритмы', 'Команды', 'Безопасность в интернете', 'Работа с файлами']
 };
 
 function show(view) {
@@ -141,6 +149,7 @@ async function dashboard() {
     show('welcome');
     return;
   }
+  renderSubjectChoices(config.demo_mode ? ['Математика'] : (profile.subjects || config.subjects));
   lesson = profile.lesson;
   const daily = profile.daily || {date: '', correct: 0, target: 2, total: 5};
   const count = Math.max(0, Math.min(5, Number(daily.correct) || 0));
@@ -437,7 +446,8 @@ function selectSubject(name, reveal = false) {
   if (!reveal) return;
   $('topic').value = '';
   $('generate').disabled = true;
-  const topics = config.demo_mode ? ['Обыкновенные дроби'] : (subjectTopics[name] || []);
+  const topicCatalog = profile?.student?.grade <= 4 ? primarySubjectTopics : subjectTopics;
+  const topics = config.demo_mode ? ['Обыкновенные дроби'] : (topicCatalog[name] || []);
   $('topic-list-label').textContent = config.demo_mode ? 'Демо-тема' : 'Пять важных тем';
   $('catalog').classList.toggle('demo-topic-stage', config.demo_mode);
   $('topic-picks').replaceChildren(...topics.map((topic, index) => {
@@ -483,6 +493,19 @@ function createSubjectCard(subject, index) {
   card.append(icon, label);
   card.onclick = () => selectSubject(subject, true);
   return card;
+}
+
+function renderSubjectChoices(subjects) {
+  $('subject-chips').replaceChildren();
+  $('subject').replaceChildren();
+  subjects.forEach((subject, index) => {
+    const option = document.createElement('option');
+    option.value = subject;
+    option.textContent = subject;
+    $('subject').append(option);
+    $('subject-chips').append(createSubjectCard(subject, index));
+  });
+  if (subjects.length) selectSubject(subjects[0]);
 }
 
 $('register').onclick = () => action($('register'), 'Знакомимся…', async () => {
@@ -620,16 +643,7 @@ async function start() {
   try {
     config = await api('/api/config');
     $('demo-banner').hidden = !config.demo_mode;
-    $('subject-chips').replaceChildren();
-    $('subject').replaceChildren();
-    (config.demo_mode ? ['Математика'] : config.subjects).forEach((subject, index) => {
-      const option = document.createElement('option');
-      option.value = subject;
-      option.textContent = subject;
-      $('subject').append(option);
-      $('subject-chips').append(createSubjectCard(subject, index));
-    });
-    if (config.subjects.length) selectSubject(config.subjects[0]);
+    renderSubjectChoices(config.demo_mode ? ['Математика'] : config.subjects);
     $('subject').onchange = () => selectSubject($('subject').value, true);
     if (config.demo_mode) {
       selectSubject('Математика');
